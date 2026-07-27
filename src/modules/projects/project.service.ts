@@ -11,4 +11,8 @@ export class ProjectService {
   create(userId: string, input: CreateProjectInput) {
     return this.projects.createWithOwner({ ...input, userId });
   }
+
+  listForUser(userId: string) {
+    return this.projects.listForUser(userId);
+  }
 }

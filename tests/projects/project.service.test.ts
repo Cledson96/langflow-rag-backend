@@ -32,4 +32,19 @@ describe('ProjectService', () => {
 
     expect(project.members[0]).toMatchObject({ role: 'OWNER', userId: user.id });
   });
+
+  it('lists only projects in which the user is a member', async () => {
+    const member = await prisma.user.create({
+      data: { email: `member-${randomUUID()}@example.com`, passwordHash: 'hash' },
+    });
+    const outsider = await prisma.user.create({
+      data: { email: `outsider-${randomUUID()}@example.com`, passwordHash: 'hash' },
+    });
+    const project = await projects.create(member.id, { name: 'Projeto membro', slug: `membro-${randomUUID()}` });
+
+    await expect(projects.listForUser(member.id)).resolves.toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: project.id })]),
+    );
+    await expect(projects.listForUser(outsider.id)).resolves.toEqual([]);
+  });
 });

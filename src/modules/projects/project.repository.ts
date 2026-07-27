@@ -19,4 +19,11 @@ export class ProjectRepository {
       include: { members: true },
     });
   }
+
+  listForUser(userId: string) {
+    return this.database.project.findMany({
+      where: { members: { some: { userId } } },
+      orderBy: { updatedAt: 'desc' },
+    });
+  }
 }
