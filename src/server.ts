@@ -10,6 +10,8 @@ import { createRoutes } from '@/shared/routes';
 interface CreateServerOptions {
   authRouter?: Router;
   projectRouter?: Router;
+  conversationRouter?: Router;
+  chatRouter?: Router;
   corsOrigins?: readonly string[];
   databaseHealthcheck?: DatabaseHealthcheck;
 }
@@ -17,6 +19,8 @@ interface CreateServerOptions {
 export function createServer({
   authRouter,
   projectRouter,
+  conversationRouter,
+  chatRouter,
   corsOrigins = [],
   databaseHealthcheck = alwaysHealthyDatabase,
 }: CreateServerOptions = {}) {
@@ -35,6 +39,8 @@ export function createServer({
     app.use(authRouter);
   }
   if (projectRouter) app.use(projectRouter);
+  if (conversationRouter) app.use(conversationRouter);
+  if (chatRouter) app.use(chatRouter);
   app.use(createRoutes(databaseHealthcheck));
 
   return app;

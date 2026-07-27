@@ -11,6 +11,12 @@ import { UserRepository } from '@/modules/users/user.repository';
 import { ProjectRepository } from '@/modules/projects/project.repository';
 import { createProjectRouter } from '@/modules/projects/project.routes';
 import { ProjectService } from '@/modules/projects/project.service';
+import { ConversationRepository } from '@/modules/conversations/conversation.repository';
+import { ConversationService } from '@/modules/conversations/conversation.service';
+import { createConversationRouter } from '@/modules/conversations/conversation.routes';
+import { LangflowClient } from '@/infrastructure/langflow/langflow-client';
+import { ChatService } from '@/modules/chat/chat.service';
+import { createChatRouter } from '@/modules/chat/chat.routes';
 
 const config = loadEnv(process.env);
 const logger = createLogger();
@@ -20,11 +26,25 @@ const authService = new AuthService(new UserRepository(database), {
   secret: config.jwtSecret,
 });
 const projectService = new ProjectService(new ProjectRepository(database));
+const conversationService = new ConversationService(
+  new ConversationRepository(database),
+  new ProjectRepository(database),
+  ['openai/gpt-4.1-mini'],
+);
+const conversationRepository = new ConversationRepository(database);
+const projectRepository = new ProjectRepository(database);
+const chatService = new ChatService(
+  conversationRepository,
+  projectRepository,
+  new LangflowClient({ apiKey: config.langflowApiKey, baseUrl: config.langflowBaseUrl, flowId: config.langflowFlowId }),
+);
 const server = createServer({
   authRouter: createAuthRouter(authService),
   corsOrigins: config.corsOrigins,
   databaseHealthcheck: new PrismaDatabaseHealthcheck(database),
   projectRouter: createProjectRouter(authService, projectService),
+  conversationRouter: createConversationRouter(authService, conversationService),
+  chatRouter: createChatRouter(authService, chatService),
 });
 
 const httpServer = server.listen(config.port, () => {
