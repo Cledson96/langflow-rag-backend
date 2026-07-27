@@ -1,0 +1,40 @@
+services:
+  api:
+    image: ${API_IMAGE:?defina API_IMAGE}
+    restart: unless-stopped
+    env_file: .env.production
+    ports:
+      - "127.0.0.1:${APP_PORT:-3010}:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - default
+      - langflow_ai_internal
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/readyz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-rag_app}
+      POSTGRES_USER: ${POSTGRES_USER:-rag_app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_data:
+
+networks:
+  langflow_ai_internal:
+    external: true
