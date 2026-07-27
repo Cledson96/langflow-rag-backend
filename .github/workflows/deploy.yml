@@ -72,6 +72,7 @@ jobs:
           cat > /tmp/ghcr.env <<EOF
           GHCR_USERNAME=${{ github.repository_owner }}
           GHCR_TOKEN=${{ secrets.GHCR_PULL_TOKEN }}
+          CERTBOT_EMAIL=${{ secrets.CERTBOT_EMAIL }}
           EOF
       - name: Upload and deploy
         env:

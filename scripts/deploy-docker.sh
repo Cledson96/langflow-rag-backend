@@ -18,3 +18,12 @@ curl --fail --silent --show-error "http://127.0.0.1:${APP_PORT}/readyz" >/dev/nu
 sed "s|__APP_PORT__|${APP_PORT}|g" deploy/nginx/api-langflow.cledson.com.br.conf.template > /etc/nginx/sites-available/api-langflow.cledson.com.br.conf
 ln -sf /etc/nginx/sites-available/api-langflow.cledson.com.br.conf /etc/nginx/sites-enabled/api-langflow.cledson.com.br.conf
 nginx -t && systemctl reload nginx
+if [ "${ENABLE_CERTBOT:-true}" = 'true' ]; then
+  certbot_args=(--nginx --non-interactive --agree-tos -d api-langflow.cledson.com.br)
+  if [ -n "${CERTBOT_EMAIL:-}" ]; then
+    certbot_args+=(-m "$CERTBOT_EMAIL")
+  else
+    certbot_args+=(--register-unsafely-without-email)
+  fi
+  certbot "${certbot_args[@]}"
+fi
