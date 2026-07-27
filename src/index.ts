@@ -8,6 +8,9 @@ import { PrismaDatabaseHealthcheck } from '@/infrastructure/database/prisma-heal
 import { AuthService } from '@/modules/auth/auth.service';
 import { createAuthRouter } from '@/modules/auth/auth.routes';
 import { UserRepository } from '@/modules/users/user.repository';
+import { ProjectRepository } from '@/modules/projects/project.repository';
+import { createProjectRouter } from '@/modules/projects/project.routes';
+import { ProjectService } from '@/modules/projects/project.service';
 
 const config = loadEnv(process.env);
 const logger = createLogger();
@@ -16,10 +19,12 @@ const authService = new AuthService(new UserRepository(database), {
   expiresIn: config.jwtExpiresIn,
   secret: config.jwtSecret,
 });
+const projectService = new ProjectService(new ProjectRepository(database));
 const server = createServer({
   authRouter: createAuthRouter(authService),
   corsOrigins: config.corsOrigins,
   databaseHealthcheck: new PrismaDatabaseHealthcheck(database),
+  projectRouter: createProjectRouter(authService, projectService),
 });
 
 const httpServer = server.listen(config.port, () => {

@@ -9,12 +9,14 @@ import { createRoutes } from '@/shared/routes';
 
 interface CreateServerOptions {
   authRouter?: Router;
+  projectRouter?: Router;
   corsOrigins?: readonly string[];
   databaseHealthcheck?: DatabaseHealthcheck;
 }
 
 export function createServer({
   authRouter,
+  projectRouter,
   corsOrigins = [],
   databaseHealthcheck = alwaysHealthyDatabase,
 }: CreateServerOptions = {}) {
@@ -32,6 +34,7 @@ export function createServer({
   if (authRouter) {
     app.use(authRouter);
   }
+  if (projectRouter) app.use(projectRouter);
   app.use(createRoutes(databaseHealthcheck));
 
   return app;
