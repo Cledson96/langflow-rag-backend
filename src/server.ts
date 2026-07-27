@@ -1,5 +1,5 @@
 import cors from 'cors';
-import express from 'express';
+import express, { type Router } from 'express';
 import helmet from 'helmet';
 import pinoHttp from 'pino-http';
 
@@ -8,11 +8,13 @@ import { createLogger } from '@/shared/logger';
 import { createRoutes } from '@/shared/routes';
 
 interface CreateServerOptions {
+  authRouter?: Router;
   corsOrigins?: readonly string[];
   databaseHealthcheck?: DatabaseHealthcheck;
 }
 
 export function createServer({
+  authRouter,
   corsOrigins = [],
   databaseHealthcheck = alwaysHealthyDatabase,
 }: CreateServerOptions = {}) {
@@ -27,6 +29,9 @@ export function createServer({
   );
   app.use(express.json({ limit: '256kb' }));
   app.use(pinoHttp({ logger: createLogger() }));
+  if (authRouter) {
+    app.use(authRouter);
+  }
   app.use(createRoutes(databaseHealthcheck));
 
   return app;
