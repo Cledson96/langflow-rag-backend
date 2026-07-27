@@ -1,0 +1,11 @@
+node_modules/
+dist/
+coverage/
+.env
+.env.dev
+.env.production
+!.env.example
+!.env.dev.example
+!.env.production.example
+*.log
+.DS_Store
