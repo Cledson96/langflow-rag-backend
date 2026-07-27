@@ -31,5 +31,24 @@ export function createAuthRouter(authService: AuthService) {
     response.status(200).json(result);
   });
 
+  router.get('/me', async (request, response) => {
+    const authorization = request.header('authorization');
+    const token = authorization?.startsWith('Bearer ') ? authorization.slice('Bearer '.length) : undefined;
+
+    if (!token) {
+      response.status(401).json({ error: 'unauthorized' });
+      return;
+    }
+
+    const user = await authService.getAuthenticatedUser(token);
+
+    if (!user) {
+      response.status(401).json({ error: 'unauthorized' });
+      return;
+    }
+
+    response.status(200).json(user);
+  });
+
   return router;
 }

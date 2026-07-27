@@ -16,6 +16,10 @@ const authService = new AuthService(new UserRepository(prisma), {
 });
 
 beforeAll(async () => {
+  await prisma.message.deleteMany();
+  await prisma.conversation.deleteMany();
+  await prisma.projectMember.deleteMany();
+  await prisma.project.deleteMany();
   await prisma.user.deleteMany();
 });
 
@@ -35,5 +39,20 @@ describe('auth routes', () => {
     expect(response.status).toBe(201);
     expect(response.body).toMatchObject({ token: expect.any(String), user: { email: expect.any(String) } });
     expect(response.body.user).not.toHaveProperty('passwordHash');
+  });
+
+  it('returns the authenticated user from a bearer token', async () => {
+    const app = createServer({ authRouter: createAuthRouter(authService) });
+    const registration = await request(app)
+      .post('/auth/register')
+      .send({
+        email: `user-${randomUUID()}@example.com`,
+        password: 'senha-segura-123',
+      });
+
+    const response = await request(app).get('/me').set('Authorization', `Bearer ${registration.body.token}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual(registration.body.user);
   });
 });

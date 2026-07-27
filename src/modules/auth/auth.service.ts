@@ -1,5 +1,5 @@
 import argon2 from 'argon2';
-import { SignJWT } from 'jose';
+import { jwtVerify, SignJWT } from 'jose';
 
 import { UserRepository } from '@/modules/users/user.repository';
 
@@ -60,6 +60,22 @@ export class AuthService {
       token: await this.createToken(user.id, user.email),
       user: this.toPublicUser(user),
     };
+  }
+
+  async getAuthenticatedUser(token: string): Promise<PublicUser | null> {
+    try {
+      const verified = await jwtVerify(token, this.signingKey);
+      const userId = verified.payload.sub;
+
+      if (!userId) {
+        return null;
+      }
+
+      const user = await this.users.findById(userId);
+      return user ? this.toPublicUser(user) : null;
+    } catch {
+      return null;
+    }
   }
 
   private async createToken(userId: string, email: string) {
