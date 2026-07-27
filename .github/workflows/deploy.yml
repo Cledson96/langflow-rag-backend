@@ -69,13 +69,19 @@ jobs:
           LANGFLOW_API_KEY=${{ secrets.LANGFLOW_API_KEY }}
           OPENROUTER_ALLOWED_MODELS=${{ vars.OPENROUTER_ALLOWED_MODELS }}
           EOF
+          cat > /tmp/ghcr.env <<EOF
+          GHCR_USERNAME=${{ github.repository_owner }}
+          GHCR_TOKEN=${{ secrets.GHCR_PULL_TOKEN }}
+          EOF
       - name: Upload and deploy
         env:
           DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
           VPS_HOST: ${{ secrets.VPS_HOST }}
           VPS_PORT: ${{ secrets.VPS_PORT }}
           VPS_USER: ${{ secrets.VPS_USER }}
+          GHCR_USERNAME: ${{ github.repository_owner }}
+          GHCR_TOKEN: ${{ secrets.GHCR_PULL_TOKEN }}
         run: |
           tar -czf /tmp/infra.tgz docker-compose.yml deploy scripts
-          scp -i ~/.ssh/id_ed25519 -P "$VPS_PORT" /tmp/infra.tgz /tmp/app.env /tmp/app.env.production "$VPS_USER@$VPS_HOST:/tmp/"
-          ssh -i ~/.ssh/id_ed25519 -p "$VPS_PORT" "$VPS_USER@$VPS_HOST" "set -euo pipefail; sudo mkdir -p '$DEPLOY_PATH'; sudo tar -xzf /tmp/infra.tgz -C '$DEPLOY_PATH'; sudo mv /tmp/app.env '$DEPLOY_PATH/.env'; sudo mv /tmp/app.env.production '$DEPLOY_PATH/.env.production'; sudo DEPLOY_PATH='$DEPLOY_PATH' API_IMAGE='${{ env.IMAGE }}:${{ github.sha }}' APP_PORT='${{ vars.APP_PORT }}' bash '$DEPLOY_PATH/scripts/deploy-docker.sh'"
+          scp -i ~/.ssh/id_ed25519 -P "$VPS_PORT" /tmp/infra.tgz /tmp/app.env /tmp/app.env.production /tmp/ghcr.env "$VPS_USER@$VPS_HOST:/tmp/"
+          ssh -i ~/.ssh/id_ed25519 -p "$VPS_PORT" "$VPS_USER@$VPS_HOST" "set -euo pipefail; sudo mkdir -p '$DEPLOY_PATH'; sudo tar -xzf /tmp/infra.tgz -C '$DEPLOY_PATH'; sudo mv /tmp/app.env '$DEPLOY_PATH/.env'; sudo mv /tmp/app.env.production '$DEPLOY_PATH/.env.production'; sudo mv /tmp/ghcr.env '$DEPLOY_PATH/.deploy-secrets'; sudo chmod 600 '$DEPLOY_PATH/.deploy-secrets'; sudo DEPLOY_PATH='$DEPLOY_PATH' API_IMAGE='${{ env.IMAGE }}:${{ github.sha }}' APP_PORT='${{ vars.APP_PORT }}' bash '$DEPLOY_PATH/scripts/deploy-docker.sh'"

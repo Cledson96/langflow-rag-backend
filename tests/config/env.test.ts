@@ -13,12 +13,14 @@ describe('loadEnv', () => {
       LANGFLOW_BASE_URL: 'http://langflow:7860',
       LANGFLOW_FLOW_ID: 'flow-id',
       NODE_ENV: 'test',
+      OPENROUTER_ALLOWED_MODELS: 'openai/gpt-4.1-mini,anthropic/claude-sonnet-4',
       PORT: '3010',
     });
 
     expect(config.port).toBe(3010);
     expect(config.databaseUrl).toBe('postgresql://app:app@127.0.0.1:5432/app');
     expect(config.corsOrigins).toEqual(['https://app.cledson.com.br', 'https://localhost:3000']);
+    expect(config.openrouterAllowedModels).toEqual(['openai/gpt-4.1-mini', 'anthropic/claude-sonnet-4']);
     expect(Object.isFrozen(config)).toBe(true);
   });
 });

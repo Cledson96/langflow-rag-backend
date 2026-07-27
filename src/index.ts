@@ -29,7 +29,7 @@ const projectService = new ProjectService(new ProjectRepository(database));
 const conversationService = new ConversationService(
   new ConversationRepository(database),
   new ProjectRepository(database),
-  ['openai/gpt-4.1-mini'],
+  config.openrouterAllowedModels,
 );
 const conversationRepository = new ConversationRepository(database);
 const projectRepository = new ProjectRepository(database);

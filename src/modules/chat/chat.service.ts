@@ -1,9 +1,9 @@
-import { LangflowClient } from '@/infrastructure/langflow/langflow-client';
+import type { LangflowRunner } from '@/infrastructure/langflow/langflow-client';
 import { ConversationRepository } from '@/modules/conversations/conversation.repository';
 import { ProjectRepository } from '@/modules/projects/project.repository';
 
 export class ChatService {
-  constructor(private readonly conversations: ConversationRepository, private readonly projects: ProjectRepository, private readonly langflow: LangflowClient) {}
+  constructor(private readonly conversations: ConversationRepository, private readonly projects: ProjectRepository, private readonly langflow: LangflowRunner) {}
   async send(userId: string, projectId: string, conversationId: string, content: string) {
     if (!(await this.projects.isMember(projectId, userId))) throw new Error('project access denied');
     const conversation = await this.conversations.findForUser(conversationId, projectId, userId);

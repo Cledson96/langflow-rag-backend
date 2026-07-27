@@ -9,6 +9,7 @@ const environmentSchema = z.object({
   LANGFLOW_BASE_URL: z.url(),
   LANGFLOW_FLOW_ID: z.string().min(1),
   NODE_ENV: z.enum(['development', 'production', 'test']),
+  OPENROUTER_ALLOWED_MODELS: z.string().min(1),
   PORT: z.coerce.number().int().positive(),
 });
 
@@ -21,6 +22,7 @@ export interface AppConfig {
   langflowBaseUrl: string;
   langflowFlowId: string;
   nodeEnv: 'development' | 'production' | 'test';
+  openrouterAllowedModels: readonly string[];
   port: number;
 }
 
@@ -40,6 +42,11 @@ export function loadEnv(environment: Record<string, string | undefined>): Readon
     langflowBaseUrl: parsed.LANGFLOW_BASE_URL,
     langflowFlowId: parsed.LANGFLOW_FLOW_ID,
     nodeEnv: parsed.NODE_ENV,
+    openrouterAllowedModels: Object.freeze(
+      parsed.OPENROUTER_ALLOWED_MODELS.split(',')
+        .map((model) => model.trim())
+        .filter(Boolean),
+    ),
     port: parsed.PORT,
   });
 }

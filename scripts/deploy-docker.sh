@@ -2,7 +2,15 @@
 set -euo pipefail
 : "${DEPLOY_PATH:?}" "${API_IMAGE:?}" "${APP_PORT:=3010}"
 cd "$DEPLOY_PATH"
+if [ -f .deploy-secrets ]; then
+  set -a
+  . ./.deploy-secrets
+  set +a
+fi
 docker network inspect langflow_ai_internal >/dev/null 2>&1 || docker network create langflow_ai_internal
+if [ -n "${GHCR_TOKEN:-}" ]; then
+  printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "${GHCR_USERNAME:?GHCR_USERNAME obrigatório quando GHCR_TOKEN estiver definido}" --password-stdin
+fi
 docker compose --env-file .env pull
 docker compose --env-file .env run --rm api npx prisma migrate deploy
 docker compose --env-file .env up -d --remove-orphans

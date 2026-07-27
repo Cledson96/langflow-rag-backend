@@ -8,7 +8,7 @@ const schema = z.object({ name: z.string().trim().min(1).max(120), slug: z.strin
 
 export function createProjectRouter(auth: AuthService, projects: ProjectService) {
   const router = Router();
-  router.use(async (request, response, next) => {
+  router.use('/projects', async (request, response, next) => {
     const value = request.header('authorization');
     const user = value?.startsWith('Bearer ') ? await auth.getAuthenticatedUser(value.slice(7)) : null;
     if (!user) return response.status(401).json({ error: 'unauthorized' });

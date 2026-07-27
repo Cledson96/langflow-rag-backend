@@ -5,6 +5,7 @@ src/generated/prisma/
 .env
 .env.dev
 .env.production
+.deploy-secrets
 !.env.example
 !.env.dev.example
 !.env.production.example
