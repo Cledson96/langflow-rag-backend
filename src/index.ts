@@ -3,18 +3,27 @@ import 'dotenv/config';
 import { loadEnv } from '@/shared/config/env';
 import { createLogger } from '@/shared/logger';
 import { createServer } from '@/server';
+import { createPrismaClient } from '@/infrastructure/database/prisma-client';
+import { PrismaDatabaseHealthcheck } from '@/infrastructure/database/prisma-healthcheck';
 
 const config = loadEnv(process.env);
 const logger = createLogger();
-const server = createServer({ corsOrigins: config.corsOrigins });
+const database = createPrismaClient(config.databaseUrl);
+const server = createServer({
+  corsOrigins: config.corsOrigins,
+  databaseHealthcheck: new PrismaDatabaseHealthcheck(database),
+});
 
 const httpServer = server.listen(config.port, () => {
   logger.info({ port: config.port }, 'server started');
 });
 
-function shutdown(signal: NodeJS.Signals) {
+async function shutdown(signal: NodeJS.Signals) {
   logger.info({ signal }, 'shutting down');
-  httpServer.close(() => process.exit(0));
+  httpServer.close(async () => {
+    await database.$disconnect();
+    process.exit(0);
+  });
 }
 
 process.once('SIGINT', shutdown);

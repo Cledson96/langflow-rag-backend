@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 const environmentSchema = z.object({
   CORS_ORIGINS: z.string().min(1),
+  DATABASE_URL: z.url(),
   JWT_EXPIRES_IN: z.string().min(1),
   JWT_SECRET: z.string().min(24),
   LANGFLOW_API_KEY: z.string().min(1),
@@ -13,6 +14,7 @@ const environmentSchema = z.object({
 
 export interface AppConfig {
   corsOrigins: readonly string[];
+  databaseUrl: string;
   jwtExpiresIn: string;
   jwtSecret: string;
   langflowApiKey: string;
@@ -31,6 +33,7 @@ export function loadEnv(environment: Record<string, string | undefined>): Readon
         .map((origin) => origin.trim())
         .filter(Boolean),
     ),
+    databaseUrl: parsed.DATABASE_URL,
     jwtExpiresIn: parsed.JWT_EXPIRES_IN,
     jwtSecret: parsed.JWT_SECRET,
     langflowApiKey: parsed.LANGFLOW_API_KEY,

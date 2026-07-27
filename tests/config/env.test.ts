@@ -6,6 +6,7 @@ describe('loadEnv', () => {
   it('returns an immutable typed configuration', () => {
     const config = loadEnv({
       CORS_ORIGINS: 'https://app.cledson.com.br,https://localhost:3000',
+      DATABASE_URL: 'postgresql://app:app@127.0.0.1:5432/app',
       JWT_EXPIRES_IN: '1h',
       JWT_SECRET: 'a-very-long-development-secret',
       LANGFLOW_API_KEY: 'langflow-service-key',
@@ -16,6 +17,7 @@ describe('loadEnv', () => {
     });
 
     expect(config.port).toBe(3010);
+    expect(config.databaseUrl).toBe('postgresql://app:app@127.0.0.1:5432/app');
     expect(config.corsOrigins).toEqual(['https://app.cledson.com.br', 'https://localhost:3000']);
     expect(Object.isFrozen(config)).toBe(true);
   });
