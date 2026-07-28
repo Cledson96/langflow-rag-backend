@@ -9,7 +9,17 @@ export class ChatService {
     const conversation = await this.conversations.findForUser(conversationId, projectId, userId);
     if (!conversation) throw new Error('conversation not found');
     const userMessage = await this.conversations.createMessage({ content, conversationId, role: 'USER' });
-    const answer = await this.langflow.run({ conversationId, modelId: conversation.modelId, projectId, userId, value: content });
+    const history = (await this.conversations.listMessages(conversationId))
+      .filter((message) => message.role === 'USER' || message.role === 'ASSISTANT')
+      .map((message) => ({ content: message.content, role: message.role as 'ASSISTANT' | 'USER' }));
+    const answer = await this.langflow.run({
+      conversationId,
+      history,
+      modelId: conversation.modelId,
+      projectId,
+      userId,
+      value: content,
+    });
     const assistantMessage = await this.conversations.createMessage({ content: answer.content, conversationId, metadata: answer.metadata, modelId: conversation.modelId, role: 'ASSISTANT' });
     return { assistantMessage, userMessage };
   }

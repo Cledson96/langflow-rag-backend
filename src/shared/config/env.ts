@@ -16,6 +16,8 @@ const environmentSchema = z.object({
   LANGFLOW_FLOW_ID: z.string().min(1),
   NODE_ENV: z.enum(['development', 'production', 'test']),
   OPENROUTER_ALLOWED_MODELS: z.string().min(1),
+  OPENROUTER_API_KEY: z.string().min(1),
+  OPENROUTER_BASE_URL: z.url().default('https://openrouter.ai/api/v1'),
   PORT: z.coerce.number().int().positive(),
 });
 
@@ -35,6 +37,8 @@ export interface AppConfig {
   langflowFlowId: string;
   nodeEnv: 'development' | 'production' | 'test';
   openrouterAllowedModels: readonly string[];
+  openrouterApiKey: string;
+  openrouterBaseUrl: string;
   port: number;
 }
 
@@ -69,6 +73,8 @@ export function loadEnv(environment: Record<string, string | undefined>): Readon
         .map((model) => model.trim())
         .filter(Boolean),
     ),
+    openrouterApiKey: parsed.OPENROUTER_API_KEY,
+    openrouterBaseUrl: parsed.OPENROUTER_BASE_URL,
     port: parsed.PORT,
   });
 }

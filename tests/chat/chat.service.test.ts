@@ -54,6 +54,7 @@ describe('ChatService', () => {
     });
     expect(runner.inputs).toEqual([{
       conversationId: conversation.id,
+      history: [{ content: 'O que é RAG?', role: 'USER' }],
       modelId: 'openai/gpt-4.1-mini',
       projectId: project.id,
       userId: user.id,

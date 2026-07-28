@@ -80,6 +80,8 @@ jobs:
           LANGFLOW_FLOW_ID=${{ vars.LANGFLOW_FLOW_ID }}
           LANGFLOW_API_KEY=${{ secrets.LANGFLOW_API_KEY }}
           OPENROUTER_ALLOWED_MODELS=${{ vars.OPENROUTER_ALLOWED_MODELS }}
+          OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY }}
+          OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
           EOF
           cat > /tmp/ghcr.env <<EOF
           GHCR_USERNAME=${{ github.repository_owner }}

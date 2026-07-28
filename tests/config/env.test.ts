@@ -19,6 +19,8 @@ describe('loadEnv', () => {
       LANGFLOW_FLOW_ID: 'flow-id',
       NODE_ENV: 'test',
       OPENROUTER_ALLOWED_MODELS: 'openai/gpt-4.1-mini,anthropic/claude-sonnet-4',
+      OPENROUTER_API_KEY: 'openrouter-key',
+      OPENROUTER_BASE_URL: 'https://openrouter.ai/api/v1',
       PORT: '3010',
     });
 

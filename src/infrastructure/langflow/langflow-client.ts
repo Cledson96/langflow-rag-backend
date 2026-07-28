@@ -4,6 +4,7 @@ const responseSchema = z.unknown();
 
 export interface LangflowRunInput {
   conversationId: string;
+  history?: Array<{ content: string; role: 'ASSISTANT' | 'USER' }>;
   modelId: string;
   projectId: string;
   userId: string;

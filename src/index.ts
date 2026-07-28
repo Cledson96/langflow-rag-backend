@@ -24,6 +24,9 @@ import { GoogleConnectionRepository } from '@/modules/google/google-connection.r
 import { GoogleOAuthService } from '@/modules/google/google-oauth.service';
 import { createGoogleRouter } from '@/modules/google/google.routes';
 import { TokenCipher } from '@/shared/security/token-cipher';
+import { OpenRouterClient } from '@/infrastructure/openrouter/openrouter-client';
+import { GmailService } from '@/modules/google/gmail.service';
+import { AgentRunner } from '@/modules/agent/agent-runner';
 
 const config = loadEnv(process.env);
 const logger = createLogger();
@@ -55,10 +58,20 @@ const conversationService = new ConversationService(
 );
 const conversationRepository = new ConversationRepository(database);
 const projectRepository = new ProjectRepository(database);
+const langflowClient = new LangflowClient({
+  apiKey: config.langflowApiKey,
+  baseUrl: config.langflowBaseUrl,
+  flowId: config.langflowFlowId,
+});
 const chatService = new ChatService(
   conversationRepository,
   projectRepository,
-  new LangflowClient({ apiKey: config.langflowApiKey, baseUrl: config.langflowBaseUrl, flowId: config.langflowFlowId }),
+  new AgentRunner(
+    new OpenRouterClient({ apiKey: config.openrouterApiKey, baseUrl: config.openrouterBaseUrl }),
+    langflowClient,
+    googleOAuthService,
+    new GmailService(),
+  ),
 );
 const server = createServer({
   authRouter: createAuthRouter(authService),
