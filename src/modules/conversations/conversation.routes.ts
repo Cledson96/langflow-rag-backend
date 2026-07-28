@@ -8,6 +8,7 @@ const createSchema = z.object({
   modelId: z.string().min(1).optional(),
   title: z.string().trim().min(1).max(200).optional(),
 });
+const updateModelSchema = z.object({ modelId: z.string().trim().min(1).max(200) });
 
 export function createConversationRouter(auth: AuthService, conversations: ConversationService) {
   const router = Router();
@@ -39,6 +40,17 @@ export function createConversationRouter(auth: AuthService, conversations: Conve
       createSchema.parse(request.body),
     );
     response.status(201).json(result);
+  });
+
+  router.patch('/projects/:projectId/conversations/:conversationId', async (request, response) => {
+    const input = updateModelSchema.parse(request.body);
+    const result = await conversations.updateModel(
+      response.locals.user.id,
+      request.params.projectId,
+      request.params.conversationId,
+      input.modelId,
+    );
+    response.json(result);
   });
 
   return router;

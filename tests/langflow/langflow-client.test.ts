@@ -46,4 +46,35 @@ describe('LangflowClient', () => {
       },
     });
   });
+
+  it('separates appended RAG sources from the visible answer', async () => {
+    globalThis.fetch = vi.fn(async () => new Response(JSON.stringify({
+      outputs: [{
+        results: {
+          message: {
+            text: 'A resposta limpa.\n\nFonte: README.md # Visão geral\nFonte: projects/app.md',
+          },
+        },
+      }],
+    }), { status: 200 })) as typeof fetch;
+    const client = new LangflowClient({ apiKey: 'service-key', baseUrl: 'http://langflow:7860', flowId: 'flow-id' });
+
+    const answer = await client.run({
+      conversationId: 'conversation-1',
+      modelId: 'openai/gpt-4.1-mini',
+      projectId: 'project-1',
+      userId: 'user-1',
+      value: 'Pergunta',
+    });
+
+    expect(answer).toEqual({
+      content: 'A resposta limpa.',
+      metadata: {
+        sources: [
+          { displayName: 'README.md # Visão geral' },
+          { displayName: 'projects/app.md' },
+        ],
+      },
+    });
+  });
 });

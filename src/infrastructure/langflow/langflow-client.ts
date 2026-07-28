@@ -36,7 +36,14 @@ export class LangflowClient implements LangflowRunner {
     const payload = responseSchema.parse(await response.json());
     const message = findMessage(payload);
     if (typeof message?.text !== 'string') throw new Error('Langflow response did not contain a chat message');
-    return { content: message.text, metadata: toSafeMetadata(message) };
+    const answer = splitAnswerAndSources(message.text);
+    return {
+      content: answer.content,
+      metadata: {
+        ...toSafeMetadata(message),
+        ...(answer.sources.length > 0 ? { sources: answer.sources } : {}),
+      },
+    };
   }
 }
 
@@ -83,4 +90,23 @@ function toSafeMetadata(message: LangflowMessage): Record<string, unknown> {
     };
   }
   return metadata;
+}
+
+function splitAnswerAndSources(text: string): {
+  content: string;
+  sources: Array<{ displayName: string }>;
+} {
+  const lines = text.split(/\r?\n/);
+  const sourceIndex = lines.findIndex((line) => /^\s*(?:fonte|source)\s*:/i.test(line));
+
+  if (sourceIndex === -1) {
+    return { content: text.trim(), sources: [] };
+  }
+
+  const sourceLines = lines.slice(sourceIndex).flatMap((line) => {
+    const value = line.replace(/^\s*(?:fonte|source)\s*:\s*/i, '').trim();
+    return value.length > 0 ? [{ displayName: value }] : [];
+  });
+
+  return { content: lines.slice(0, sourceIndex).join('\n').trim(), sources: sourceLines };
 }

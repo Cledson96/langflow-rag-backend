@@ -11,6 +11,9 @@ export class ConversationRepository {
   findForUser(id: string, projectId: string, userId: string) {
     return this.database.conversation.findFirst({ where: { id, projectId, createdByUserId: userId } });
   }
+  updateModel(id: string, modelId: string) {
+    return this.database.conversation.update({ data: { modelId }, where: { id } });
+  }
   createMessage(data: { content: string; conversationId: string; metadata?: object; modelId?: string; role: 'USER' | 'ASSISTANT' }) {
     return this.database.message.create({ data });
   }

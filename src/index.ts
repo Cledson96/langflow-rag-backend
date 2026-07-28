@@ -17,19 +17,24 @@ import { createConversationRouter } from '@/modules/conversations/conversation.r
 import { LangflowClient } from '@/infrastructure/langflow/langflow-client';
 import { ChatService } from '@/modules/chat/chat.service';
 import { createChatRouter } from '@/modules/chat/chat.routes';
+import { ModelRepository } from '@/modules/models/model.repository';
+import { ModelService } from '@/modules/models/model.service';
+import { createModelRouter } from '@/modules/models/model.routes';
 
 const config = loadEnv(process.env);
 const logger = createLogger();
 const database = createPrismaClient(config.databaseUrl);
 const authService = new AuthService(new UserRepository(database), {
+  adminEmails: config.adminEmails,
   expiresIn: config.jwtExpiresIn,
   secret: config.jwtSecret,
 });
+const modelService = new ModelService(new ModelRepository(database));
 const projectService = new ProjectService(new ProjectRepository(database));
 const conversationService = new ConversationService(
   new ConversationRepository(database),
   new ProjectRepository(database),
-  config.openrouterAllowedModels,
+  modelService,
 );
 const conversationRepository = new ConversationRepository(database);
 const projectRepository = new ProjectRepository(database);
@@ -45,6 +50,7 @@ const server = createServer({
   projectRouter: createProjectRouter(authService, projectService),
   conversationRouter: createConversationRouter(authService, conversationService),
   chatRouter: createChatRouter(authService, chatService),
+  modelRouter: createModelRouter(authService, modelService),
 });
 
 const httpServer = server.listen(config.port, () => {

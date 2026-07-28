@@ -10,6 +10,7 @@ const databaseUrl = process.env.TEST_DATABASE_URL ?? 'postgresql://app:app@127.0
 const prisma = new PrismaClient({ datasources: { db: { url: databaseUrl } } });
 const jwtSecret = 'a-test-secret-that-is-long-enough-for-jwt';
 const authService = new AuthService(new UserRepository(prisma), {
+  adminEmails: ['admin@example.com'],
   expiresIn: '1h',
   secret: jwtSecret,
 });
@@ -52,5 +53,14 @@ describe('AuthService', () => {
 
     expect(result.user.email).toBe(email);
     await expect(jwtVerify(result.token, new TextEncoder().encode(jwtSecret))).resolves.toBeDefined();
+  });
+
+  it('assigns the administrator role to configured emails', async () => {
+    const result = await authService.register({
+      email: 'ADMIN@example.com',
+      password: 'senha-segura-123',
+    });
+
+    expect(result.user.role).toBe('ADMIN');
   });
 });

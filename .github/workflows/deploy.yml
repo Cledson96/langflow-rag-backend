@@ -64,6 +64,7 @@ jobs:
           CORS_ORIGINS=${{ vars.CORS_ORIGINS }}
           JWT_SECRET=${{ secrets.JWT_SECRET }}
           JWT_EXPIRES_IN=1h
+          ADMIN_EMAILS=${{ vars.ADMIN_EMAILS }}
           LANGFLOW_BASE_URL=http://langflow:7860
           LANGFLOW_FLOW_ID=${{ vars.LANGFLOW_FLOW_ID }}
           LANGFLOW_API_KEY=${{ secrets.LANGFLOW_API_KEY }}

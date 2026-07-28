@@ -4,6 +4,7 @@ import { jwtVerify, SignJWT } from 'jose';
 import { UserRepository } from '@/modules/users/user.repository';
 
 interface AuthConfig {
+  adminEmails?: readonly string[];
   expiresIn: string;
   secret: string;
 }
@@ -23,6 +24,7 @@ interface PublicUser {
   email: string;
   id: string;
   name: string | null;
+  role: 'USER' | 'ADMIN';
 }
 
 export class AuthService {
@@ -36,11 +38,13 @@ export class AuthService {
   }
 
   async register(input: RegisterInput): Promise<{ token: string; user: PublicUser }> {
+    const email = input.email.toLowerCase();
     const passwordHash = await argon2.hash(input.password, { type: argon2.argon2id });
     const user = await this.users.create({
-      email: input.email.toLowerCase(),
+      email,
       name: input.name,
       passwordHash,
+      role: this.isAdminEmail(email) ? 'ADMIN' : 'USER',
     });
 
     return {
@@ -50,10 +54,15 @@ export class AuthService {
   }
 
   async login(input: LoginInput): Promise<{ token: string; user: PublicUser }> {
-    const user = await this.users.findByEmail(input.email.toLowerCase());
+    const email = input.email.toLowerCase();
+    let user = await this.users.findByEmail(email);
 
     if (!user || !(await argon2.verify(user.passwordHash, input.password))) {
       throw new Error('invalid credentials');
+    }
+
+    if (this.isAdminEmail(email) && user.role !== 'ADMIN') {
+      user = await this.users.updateRole(user.id, 'ADMIN');
     }
 
     return {
@@ -87,11 +96,16 @@ export class AuthService {
       .sign(this.signingKey);
   }
 
-  private toPublicUser(user: { email: string; id: string; name: string | null }): PublicUser {
+  private isAdminEmail(email: string): boolean {
+    return (this.config.adminEmails ?? []).some((candidate) => candidate.toLowerCase() === email);
+  }
+
+  private toPublicUser(user: { email: string; id: string; name: string | null; role: 'USER' | 'ADMIN' }): PublicUser {
     return {
       email: user.email,
       id: user.id,
       name: user.name,
+      role: user.role,
     };
   }
 }

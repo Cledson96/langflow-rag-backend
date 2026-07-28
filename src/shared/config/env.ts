@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 const environmentSchema = z.object({
+  ADMIN_EMAILS: z.string().default(''),
   CORS_ORIGINS: z.string().min(1),
   DATABASE_URL: z.url(),
   JWT_EXPIRES_IN: z.string().min(1),
@@ -14,6 +15,7 @@ const environmentSchema = z.object({
 });
 
 export interface AppConfig {
+  adminEmails: readonly string[];
   corsOrigins: readonly string[];
   databaseUrl: string;
   jwtExpiresIn: string;
@@ -30,6 +32,11 @@ export function loadEnv(environment: Record<string, string | undefined>): Readon
   const parsed = environmentSchema.parse(environment);
 
   return Object.freeze({
+    adminEmails: Object.freeze(
+      parsed.ADMIN_EMAILS.split(',')
+        .map((email) => email.trim().toLowerCase())
+        .filter(Boolean),
+    ),
     corsOrigins: Object.freeze(
       parsed.CORS_ORIGINS.split(',')
         .map((origin) => origin.trim())

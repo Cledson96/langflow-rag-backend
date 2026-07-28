@@ -1,9 +1,9 @@
-import type { PrismaClient } from '@/generated/prisma';
+import type { PrismaClient, UserRole } from '@/generated/prisma';
 
 export class UserRepository {
   constructor(private readonly database: PrismaClient) {}
 
-  create(data: { email: string; name?: string; passwordHash: string }) {
+  create(data: { email: string; name?: string; passwordHash: string; role?: UserRole }) {
     return this.database.user.create({ data });
   }
 
@@ -13,5 +13,9 @@ export class UserRepository {
 
   findById(id: string) {
     return this.database.user.findUnique({ where: { id } });
+  }
+
+  updateRole(id: string, role: UserRole) {
+    return this.database.user.update({ data: { role }, where: { id } });
   }
 }
