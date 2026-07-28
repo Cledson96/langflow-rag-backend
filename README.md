@@ -2,6 +2,10 @@
 
 API segura para autenticação, projetos, conversas e execução do fluxo Langflow RAG.
 
+O backend executa o agente Nexo, controla ferramentas e permissões, mantém memórias
+pessoais e de projeto no PostgreSQL e usa o Langflow/Qdrant somente para recuperação
+semântica do vault Obsidian. Veja [docs/agent-architecture.md](docs/agent-architecture.md).
+
 ## Desenvolvimento
 
 ```bash
