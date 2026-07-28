@@ -47,12 +47,12 @@ describe('LangflowClient', () => {
     });
   });
 
-  it('separates appended RAG sources from the visible answer', async () => {
+  it('keeps retrieved context and extracts its unique sources', async () => {
     globalThis.fetch = vi.fn(async () => new Response(JSON.stringify({
       outputs: [{
         results: {
           message: {
-            text: 'A resposta limpa.\n\nFonte: README.md # Visão geral\nFonte: projects/app.md',
+            text: 'Trecho: contexto A\nFonte: README.md\n\n---\nTrecho: contexto B\nFonte: projects/app.md\nFonte: README.md',
           },
         },
       }],
@@ -68,10 +68,10 @@ describe('LangflowClient', () => {
     });
 
     expect(answer).toEqual({
-      content: 'A resposta limpa.',
+      content: 'Trecho: contexto A\nFonte: README.md\n\n---\nTrecho: contexto B\nFonte: projects/app.md\nFonte: README.md',
       metadata: {
         sources: [
-          { displayName: 'README.md # Visão geral' },
+          { displayName: 'README.md' },
           { displayName: 'projects/app.md' },
         ],
       },

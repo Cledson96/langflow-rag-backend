@@ -57,6 +57,7 @@ describe('ChatService', () => {
       history: [{ content: 'O que é RAG?', role: 'USER' }],
       modelId: 'openai/gpt-4.1-mini',
       projectId: project.id,
+      sourceMessageId: result.userMessage.id,
       userId: user.id,
       value: 'O que é RAG?',
     }]);

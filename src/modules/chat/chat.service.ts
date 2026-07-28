@@ -17,6 +17,7 @@ export class ChatService {
       history,
       modelId: conversation.modelId,
       projectId,
+      sourceMessageId: userMessage.id,
       userId,
       value: content,
     });

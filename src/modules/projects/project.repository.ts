@@ -27,6 +27,10 @@ export class ProjectRepository {
     });
   }
 
+  findById(projectId: string) {
+    return this.database.project.findUnique({ where: { id: projectId } });
+  }
+
   isMember(projectId: string, userId: string) {
     return this.database.projectMember.findUnique({ where: { projectId_userId: { projectId, userId } } });
   }

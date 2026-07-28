@@ -25,6 +25,11 @@ enum UserRole {
   ADMIN
 }
 
+enum MemoryScope {
+  USER
+  PROJECT
+}
+
 model User {
   id                   String          @id @default(uuid()) @db.Uuid
   email                String          @unique
@@ -37,6 +42,7 @@ model User {
   memberships          ProjectMember[]
   createdConversations Conversation[]  @relation("ConversationCreator")
   googleConnection     GoogleConnection?
+  createdMemories      AgentMemory[]    @relation("MemoryCreator")
 }
 
 model GoogleConnection {
@@ -75,6 +81,7 @@ model Project {
   createdBy       User            @relation("ProjectCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
   members         ProjectMember[]
   conversations   Conversation[]
+  memories        AgentMemory[]
 }
 
 model ProjectMember {
@@ -113,6 +120,41 @@ model Message {
   metadata       Json?
   createdAt      DateTime    @default(now())
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sourcedMemories AgentMemory[]
 
   @@index([conversationId, createdAt])
+}
+
+model AgentSoul {
+  id             String   @id
+  name           String
+  role           String
+  personality    String   @db.Text
+  companyContext String   @db.Text
+  instructions   String   @db.Text
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model AgentMemory {
+  id                String      @id @default(uuid()) @db.Uuid
+  scope             MemoryScope
+  key               String
+  content           String      @db.Text
+  kind              String
+  confidence        Float       @default(1)
+  createdByUserId   String      @db.Uuid
+  projectId         String?     @db.Uuid
+  sourceMessageId   String?     @db.Uuid
+  archived          Boolean     @default(false)
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  lastAccessedAt    DateTime?
+  createdBy         User        @relation("MemoryCreator", fields: [createdByUserId], references: [id], onDelete: Cascade)
+  project           Project?    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  sourceMessage     Message?    @relation(fields: [sourceMessageId], references: [id], onDelete: SetNull)
+
+  @@index([createdByUserId, scope, archived, updatedAt])
+  @@index([projectId, scope, archived, updatedAt])
+  @@index([sourceMessageId])
 }

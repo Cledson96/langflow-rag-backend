@@ -27,6 +27,12 @@ import { TokenCipher } from '@/shared/security/token-cipher';
 import { OpenRouterClient } from '@/infrastructure/openrouter/openrouter-client';
 import { GmailService } from '@/modules/google/gmail.service';
 import { AgentRunner } from '@/modules/agent/agent-runner';
+import { AgentMemoryRepository } from '@/modules/agent/agent-memory.repository';
+import { AgentSoulRepository } from '@/modules/agent/agent-soul.repository';
+import { AgentContextService } from '@/modules/agent/agent-context.service';
+import { AgentToolRegistry } from '@/modules/agent/agent-tool-registry';
+import { createCoreAgentTools } from '@/modules/agent/core-agent-tools';
+import { createAgentRouter } from '@/modules/agent/agent.routes';
 
 const config = loadEnv(process.env);
 const logger = createLogger();
@@ -50,14 +56,17 @@ const googleOAuthService = new GoogleOAuthService(
   },
 );
 const modelService = new ModelService(new ModelRepository(database));
-const projectService = new ProjectService(new ProjectRepository(database));
+const projectRepository = new ProjectRepository(database);
+const projectService = new ProjectService(projectRepository);
 const conversationService = new ConversationService(
   new ConversationRepository(database),
   new ProjectRepository(database),
   modelService,
 );
 const conversationRepository = new ConversationRepository(database);
-const projectRepository = new ProjectRepository(database);
+const agentMemories = new AgentMemoryRepository(database);
+const agentSouls = new AgentSoulRepository(database);
+const gmailService = new GmailService();
 const langflowClient = new LangflowClient({
   apiKey: config.langflowApiKey,
   baseUrl: config.langflowBaseUrl,
@@ -68,12 +77,24 @@ const chatService = new ChatService(
   projectRepository,
   new AgentRunner(
     new OpenRouterClient({ apiKey: config.openrouterApiKey, baseUrl: config.openrouterBaseUrl }),
-    langflowClient,
-    googleOAuthService,
-    new GmailService(),
+    new AgentContextService(
+      agentSouls,
+      agentMemories,
+      userRepository,
+      projectRepository,
+    ),
+    new AgentToolRegistry(
+      createCoreAgentTools({
+        gmail: gmailService,
+        google: googleOAuthService,
+        langflow: langflowClient,
+        memories: agentMemories,
+      }),
+    ),
   ),
 );
 const server = createServer({
+  agentRouter: createAgentRouter(authService, agentSouls, agentMemories, projectRepository),
   authRouter: createAuthRouter(authService),
   corsOrigins: config.corsOrigins,
   databaseHealthcheck: new PrismaDatabaseHealthcheck(database),

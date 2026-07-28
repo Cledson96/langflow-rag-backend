@@ -7,6 +7,7 @@ export interface LangflowRunInput {
   history?: Array<{ content: string; role: 'ASSISTANT' | 'USER' }>;
   modelId: string;
   projectId: string;
+  sourceMessageId?: string;
   userId: string;
   value: string;
 }
@@ -37,7 +38,7 @@ export class LangflowClient implements LangflowRunner {
     const payload = responseSchema.parse(await response.json());
     const message = findMessage(payload);
     if (typeof message?.text !== 'string') throw new Error('Langflow response did not contain a chat message');
-    const answer = splitAnswerAndSources(message.text);
+    const answer = parseRetrievedContext(message.text);
     return {
       content: answer.content,
       metadata: {
@@ -93,21 +94,19 @@ function toSafeMetadata(message: LangflowMessage): Record<string, unknown> {
   return metadata;
 }
 
-function splitAnswerAndSources(text: string): {
+function parseRetrievedContext(text: string): {
   content: string;
   sources: Array<{ displayName: string }>;
 } {
   const lines = text.split(/\r?\n/);
-  const sourceIndex = lines.findIndex((line) => /^\s*(?:fonte|source)\s*:/i.test(line));
-
-  if (sourceIndex === -1) {
-    return { content: text.trim(), sources: [] };
-  }
-
-  const sourceLines = lines.slice(sourceIndex).flatMap((line) => {
+  const sourceLines = lines.flatMap((line) => {
+    if (!/^\s*(?:fonte|source)\s*:/i.test(line)) return [];
     const value = line.replace(/^\s*(?:fonte|source)\s*:\s*/i, '').trim();
     return value.length > 0 ? [{ displayName: value }] : [];
   });
 
-  return { content: lines.slice(0, sourceIndex).join('\n').trim(), sources: sourceLines };
+  return {
+    content: text.trim(),
+    sources: [...new Map(sourceLines.map((source) => [source.displayName, source])).values()],
+  };
 }
