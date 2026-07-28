@@ -20,7 +20,7 @@ interface LoginInput {
   password: string;
 }
 
-interface PublicUser {
+export interface PublicUser {
   email: string;
   id: string;
   name: string | null;
@@ -57,7 +57,7 @@ export class AuthService {
     const email = input.email.toLowerCase();
     let user = await this.users.findByEmail(email);
 
-    if (!user || !(await argon2.verify(user.passwordHash, input.password))) {
+    if (!user?.passwordHash || !(await argon2.verify(user.passwordHash, input.password))) {
       throw new Error('invalid credentials');
     }
 
@@ -85,6 +85,52 @@ export class AuthService {
     } catch {
       return null;
     }
+  }
+
+  async getOrCreateGoogleUser(emailValue: string, name: string | undefined) {
+    const email = emailValue.toLowerCase();
+    const existing = await this.users.findByEmail(email);
+    if (existing) {
+      if (this.isAdminEmail(email) && existing.role !== 'ADMIN') {
+        return this.users.updateRole(existing.id, 'ADMIN');
+      }
+      return existing;
+    }
+
+    return this.users.create({
+      email,
+      name,
+      passwordHash: null,
+      role: this.isAdminEmail(email) ? 'ADMIN' : 'USER',
+    });
+  }
+
+  async createSessionForUser(userId: string): Promise<{ token: string; user: PublicUser }> {
+    const user = await this.users.findById(userId);
+    if (!user) throw new Error('user not found');
+
+    return {
+      token: await this.createToken(user.id, user.email),
+      user: this.toPublicUser(user),
+    };
+  }
+
+  async createGoogleLoginHandoff(userId: string): Promise<string> {
+    return new SignJWT({ purpose: 'google_login_handoff' })
+      .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
+      .setSubject(userId)
+      .setIssuedAt()
+      .setExpirationTime('2m')
+      .sign(this.signingKey);
+  }
+
+  async exchangeGoogleLoginHandoff(code: string): Promise<{ token: string; user: PublicUser }> {
+    const verified = await jwtVerify(code, this.signingKey);
+    if (verified.payload.purpose !== 'google_login_handoff' || !verified.payload.sub) {
+      throw new Error('invalid Google login handoff');
+    }
+
+    return this.createSessionForUser(verified.payload.sub);
   }
 
   private async createToken(userId: string, email: string) {

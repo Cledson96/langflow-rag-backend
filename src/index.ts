@@ -20,15 +20,32 @@ import { createChatRouter } from '@/modules/chat/chat.routes';
 import { ModelRepository } from '@/modules/models/model.repository';
 import { ModelService } from '@/modules/models/model.service';
 import { createModelRouter } from '@/modules/models/model.routes';
+import { GoogleConnectionRepository } from '@/modules/google/google-connection.repository';
+import { GoogleOAuthService } from '@/modules/google/google-oauth.service';
+import { createGoogleRouter } from '@/modules/google/google.routes';
+import { TokenCipher } from '@/shared/security/token-cipher';
 
 const config = loadEnv(process.env);
 const logger = createLogger();
 const database = createPrismaClient(config.databaseUrl);
-const authService = new AuthService(new UserRepository(database), {
+const userRepository = new UserRepository(database);
+const authService = new AuthService(userRepository, {
   adminEmails: config.adminEmails,
   expiresIn: config.jwtExpiresIn,
   secret: config.jwtSecret,
 });
+const googleOAuthService = new GoogleOAuthService(
+  authService,
+  new GoogleConnectionRepository(database),
+  new TokenCipher(config.googleTokenEncryptionKey),
+  {
+    clientId: config.googleClientId,
+    clientSecret: config.googleClientSecret,
+    frontendUrl: config.frontendUrl,
+    jwtSecret: config.jwtSecret,
+    redirectUri: config.googleRedirectUri,
+  },
+);
 const modelService = new ModelService(new ModelRepository(database));
 const projectService = new ProjectService(new ProjectRepository(database));
 const conversationService = new ConversationService(
@@ -51,6 +68,7 @@ const server = createServer({
   conversationRouter: createConversationRouter(authService, conversationService),
   chatRouter: createChatRouter(authService, chatService),
   modelRouter: createModelRouter(authService, modelService),
+  googleRouter: createGoogleRouter(authService, googleOAuthService),
 });
 
 const httpServer = server.listen(config.port, () => {

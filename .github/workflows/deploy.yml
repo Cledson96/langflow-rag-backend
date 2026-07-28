@@ -65,6 +65,11 @@ jobs:
           JWT_SECRET=${{ secrets.JWT_SECRET }}
           JWT_EXPIRES_IN=1h
           ADMIN_EMAILS=${{ vars.ADMIN_EMAILS }}
+          FRONTEND_URL=https://app-langflow.cledson.com.br
+          GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GOOGLE_REDIRECT_URI=https://api-langflow.cledson.com.br/integrations/google/callback
+          GOOGLE_TOKEN_ENCRYPTION_KEY=${{ secrets.GOOGLE_TOKEN_ENCRYPTION_KEY }}
           LANGFLOW_BASE_URL=http://langflow:7860
           LANGFLOW_FLOW_ID=${{ vars.LANGFLOW_FLOW_ID }}
           LANGFLOW_API_KEY=${{ secrets.LANGFLOW_API_KEY }}

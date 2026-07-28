@@ -20,6 +20,7 @@ beforeAll(async () => {
   await prisma.conversation.deleteMany();
   await prisma.projectMember.deleteMany();
   await prisma.project.deleteMany();
+  await prisma.googleConnection.deleteMany();
   await prisma.user.deleteMany();
 });
 
@@ -62,5 +63,17 @@ describe('AuthService', () => {
     });
 
     expect(result.user.role).toBe('ADMIN');
+  });
+
+  it('creates a passwordless Google user and exchanges a short-lived login handoff', async () => {
+    const email = `google-${randomUUID()}@example.com`;
+    const user = await authService.getOrCreateGoogleUser(email, 'Usuário Google');
+    const handoff = await authService.createGoogleLoginHandoff(user.id);
+    const result = await authService.exchangeGoogleLoginHandoff(handoff);
+    const persisted = await prisma.user.findUniqueOrThrow({ where: { id: user.id } });
+
+    expect(result.user.email).toBe(email);
+    expect(persisted.passwordHash).toBeNull();
+    await expect(authService.login({ email, password: 'qualquer-senha' })).rejects.toThrow('invalid credentials');
   });
 });

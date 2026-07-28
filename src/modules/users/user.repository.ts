@@ -3,7 +3,7 @@ import type { PrismaClient, UserRole } from '@/generated/prisma';
 export class UserRepository {
   constructor(private readonly database: PrismaClient) {}
 
-  create(data: { email: string; name?: string; passwordHash: string; role?: UserRole }) {
+  create(data: { email: string; name?: string; passwordHash?: string | null; role?: UserRole }) {
     return this.database.user.create({ data });
   }
 

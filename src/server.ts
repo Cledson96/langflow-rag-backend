@@ -13,6 +13,7 @@ interface CreateServerOptions {
   conversationRouter?: Router;
   chatRouter?: Router;
   modelRouter?: Router;
+  googleRouter?: Router;
   corsOrigins?: readonly string[];
   databaseHealthcheck?: DatabaseHealthcheck;
 }
@@ -23,6 +24,7 @@ export function createServer({
   conversationRouter,
   chatRouter,
   modelRouter,
+  googleRouter,
   corsOrigins = [],
   databaseHealthcheck = alwaysHealthyDatabase,
 }: CreateServerOptions = {}) {
@@ -44,6 +46,7 @@ export function createServer({
   if (conversationRouter) app.use(conversationRouter);
   if (chatRouter) app.use(chatRouter);
   if (modelRouter) app.use(modelRouter);
+  if (googleRouter) app.use(googleRouter);
   app.use(createRoutes(databaseHealthcheck));
 
   return app;
